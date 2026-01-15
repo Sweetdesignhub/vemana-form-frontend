@@ -113,7 +113,7 @@ function FormPage() {
             <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-orange-500 to-amber-600 rounded-full mb-4 shadow-lg">
               <MdEvent className="w-8 h-8 text-white" />
             </div>
-            <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent mb-2">
+            <h2 className="text-3xl md:text-4xl font-bold text-amber-800 mb-2">
               Event Registration
             </h2>
             <p className="text-gray-600">
@@ -225,7 +225,7 @@ function FormPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-r from-orange-600 via-amber-600 to-orange-700 text-white py-4 px-6 rounded-xl hover:from-orange-700 hover:via-amber-700 hover:to-orange-800 transition-all duration-300 flex items-center justify-center disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 font-semibold text-lg"
+              className="w-full bg-gradient-to-r from-orange-600 via-amber-600 to-orange-700 cursor-pointer text-white py-4 px-6 rounded-xl hover:from-orange-700 hover:via-amber-700 hover:to-orange-800 transition-all duration-300 flex items-center justify-center disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 font-semibold text-lg"
             >
               {loading ? (
                 <div className="flex items-center">
