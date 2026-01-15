@@ -123,7 +123,7 @@ function DataPage() {
             <button
               onClick={fetchData}
               disabled={loading}
-              className="bg-gradient-to-r from-gray-600 to-gray-700 text-white px-5 py-3 rounded-xl hover:from-gray-700 hover:to-gray-800 transition-all duration-300 flex items-center justify-center disabled:from-gray-400 disabled:to-gray-500 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 font-medium"
+              className="bg-gradient-to-r from-gray-600 to-gray-700 text-white cursor-pointer px-5 py-3 rounded-xl hover:from-gray-700 hover:to-gray-800 transition-all duration-300 flex items-center justify-center disabled:from-gray-400 disabled:to-gray-500 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 font-medium"
             >
               <RefreshCw
                 className={`w-5 h-5 mr-2 ${loading ? "animate-spin" : ""}`}
@@ -133,7 +133,7 @@ function DataPage() {
             <button
               onClick={exportToExcel}
               disabled={data.length === 0}
-              className="bg-gradient-to-r from-green-600 to-emerald-700 text-white px-5 py-3 rounded-xl hover:from-green-700 hover:to-emerald-800 transition-all duration-300 flex items-center justify-center disabled:from-gray-400 disabled:to-gray-500 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 font-medium"
+              className="bg-gradient-to-r from-green-600 to-emerald-700 text-white cursor-pointer px-5 py-3 rounded-xl hover:from-green-700 hover:to-emerald-800 transition-all duration-300 flex items-center justify-center disabled:from-gray-400 disabled:to-gray-500 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 font-medium"
             >
               <Download className="w-5 h-5 mr-2" />
               Export to Excel

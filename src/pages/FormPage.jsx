@@ -40,12 +40,23 @@ function FormPage() {
     e.preventDefault();
     setStatus({ type: "", message: "" });
 
-    // Basic email regex
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    // Basic phone regex (allows +, digits, spaces, and 10–15 characters)
     const phoneRegex = /^\d{10}$/;
 
-    if (!emailRegex.test(formData.email)) {
+    const hasEmail = formData.email.trim() !== "";
+    const hasPhone = formData.phone.trim() !== "";
+
+    // ❌ If neither email nor phone is provided
+    if (!hasEmail && !hasPhone) {
+      setStatus({
+        type: "error",
+        message: "Please provide either an email address or a phone number.",
+      });
+      return;
+    }
+
+    // ❌ If email is provided but invalid
+    if (hasEmail && !emailRegex.test(formData.email)) {
       setStatus({
         type: "error",
         message: "Please enter a valid email address.",
@@ -53,10 +64,11 @@ function FormPage() {
       return;
     }
 
-    if (!phoneRegex.test(formData.phone)) {
+    // ❌ If phone is provided but invalid
+    if (hasPhone && !phoneRegex.test(formData.phone)) {
       setStatus({
         type: "error",
-        message: "Please enter a valid phone number.",
+        message: "Please enter a valid 10-digit phone number.",
       });
       return;
     }
@@ -64,15 +76,17 @@ function FormPage() {
     setLoading(true);
 
     try {
-      const response = await axios.post(
+      await axios.post(
         "https://vemana-form-backend-gqdxbfeugnckexbm.eastasia-01.azurewebsites.net/api/submit",
         formData
       );
+
       setStatus({
         type: "success",
         message:
           "Your registration has been received! May wisdom guide your path. 🙏",
       });
+
       setFormData({ name: "", email: "", phone: "", message: "" });
     } catch (error) {
       setStatus({
@@ -173,7 +187,6 @@ function FormPage() {
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                required
                 className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-300 bg-gray-50 focus:bg-white group-hover:border-orange-300"
                 placeholder="your.email@example.com"
               />
@@ -193,7 +206,6 @@ function FormPage() {
                 name="phone"
                 value={formData.phone}
                 onChange={handleChange}
-                required
                 inputMode="numeric"
                 pattern="\d{10}"
                 maxLength={10}
