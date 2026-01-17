@@ -31,7 +31,8 @@ function DataPage() {
   const [selectedLocation, setSelectedLocation] = useState(null);
 
   // const API_BASE_URL = "http://localhost:5000";
-  const API_BASE_URL = "https://chatbot.stockgenius.ai";
+  const API_BASE_URL =
+    "https://vemana-form-backend-gqdxbfeugnckexbm.eastasia-01.azurewebsites.net";
 
   const fetchData = async () => {
     setLoading(true);

@@ -26,7 +26,7 @@ function VerifyPage() {
     try {
       const response = await axios.get(
         // `http://localhost:5000/api/verify/${id}`
-        `https://chatbot.stockgenius.ai/api/verify/${id}`
+        `https://vemana-form-backend-gqdxbfeugnckexbm.eastasia-01.azurewebsites.net/api/verify/${id}`
       );
 
       if (response.data.valid) {
