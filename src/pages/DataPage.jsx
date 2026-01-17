@@ -825,32 +825,6 @@ function DataPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
                       <div className="flex flex-col gap-2">
-                        {/* Send Method Badge */}
-                        {row.send_method && (
-                          <span
-                            className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-semibold ${
-                              row.send_method === "email"
-                                ? "bg-purple-100 text-purple-800"
-                                : row.send_method === "sms"
-                                ? "bg-blue-100 text-blue-800"
-                                : "bg-gray-100 text-gray-800"
-                            }`}
-                          >
-                            {row.send_method === "email" && (
-                              <>
-                                <Mail className="w-3 h-3 mr-1" />
-                                Sent via Email
-                              </>
-                            )}
-                            {row.send_method === "sms" && (
-                              <>
-                                <MessageSquare className="w-3 h-3 mr-1" />
-                                Sent via SMS
-                              </>
-                            )}
-                          </span>
-                        )}
-
                         {/* View Certificate URL */}
                         {row.certificate_url && (
                           <a
