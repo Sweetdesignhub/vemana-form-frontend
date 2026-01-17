@@ -8,12 +8,12 @@ import {
   Mail,
   Phone,
   MessageSquare,
-  Sparkles,
-  BookOpen,
 } from "lucide-react";
 import { MdEvent } from "react-icons/md";
+import { useLocation } from "../context/LocationContext";
 
 function FormPage() {
+  const { location } = useLocation();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -76,10 +76,25 @@ function FormPage() {
     setLoading(true);
 
     try {
-      await axios.post(
-        "https://vemana-form-backend-gqdxbfeugnckexbm.eastasia-01.azurewebsites.net/api/submit",
-        formData
-      );
+      // Prepare submission data with location
+      const submissionData = {
+        ...formData,
+        location: location
+          ? {
+              latitude: location.latitude,
+              longitude: location.longitude,
+              accuracy: location.accuracy,
+              city: location.city,
+              state: location.state,
+              country: location.country,
+              countryCode: location.countryCode,
+              fullAddress: location.fullAddress,
+              timestamp: location.timestamp,
+            }
+          : null,
+      };
+
+      await axios.post("http://localhost:5000/api/submit", submissionData);
 
       setStatus({
         type: "success",
@@ -179,7 +194,10 @@ function FormPage() {
                 className="block text-sm font-semibold text-gray-700 mb-2 flex items-center"
               >
                 <Mail className="w-4 h-4 mr-2 text-orange-600" />
-                Email Address *
+                Email Address{" "}
+                {formData.phone.trim() === "" && (
+                  <span className="text-red-600 ml-1">*</span>
+                )}
               </label>
               <input
                 type="email"
@@ -198,7 +216,10 @@ function FormPage() {
                 className="block text-sm font-semibold text-gray-700 mb-2 flex items-center"
               >
                 <Phone className="w-4 h-4 mr-2 text-orange-600" />
-                Phone Number *
+                Phone Number{" "}
+                {formData.email.trim() === "" && (
+                  <span className="text-red-600 ml-1">*</span>
+                )}
               </label>
               <input
                 type="tel"
@@ -220,17 +241,16 @@ function FormPage() {
                 className="block text-sm font-semibold text-gray-700 mb-2 flex items-center"
               >
                 <MessageSquare className="w-4 h-4 mr-2 text-orange-600" />
-                Message / Expectations from the Event *
+                Message / Expectations from the Event
               </label>
               <textarea
                 id="message"
                 name="message"
                 value={formData.message}
                 onChange={handleChange}
-                required
                 rows="4"
                 className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-300 bg-gray-50 focus:bg-white group-hover:border-orange-300 resize-none"
-                placeholder="Share your thoughts or what you hope to gain from this spiritual gathering..."
+                placeholder="Share your thoughts or what you hope to gain from this spiritual gathering... (Optional)"
               />
             </div>
 
