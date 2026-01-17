@@ -35,7 +35,7 @@ function DataPage() {
 
   const API_BASE_URL =
     "https://vemana-form-backend-gqdxbfeugnckexbm.eastasia-01.azurewebsites.net";
-  // "http://localhost:5000";
+  // "https://vemana-form-backend-gqdxbfeugnckexbm.eastasia-01.azurewebsites.net";
 
   const fetchData = async () => {
     setLoading(true);
@@ -348,7 +348,6 @@ function DataPage() {
           </div>
         </div>
       )}
-
       {/* Email Confirmation Modal */}
       {showEmailModal && selectedParticipant && (
         <div
@@ -403,7 +402,6 @@ function DataPage() {
           </div>
         </div>
       )}
-
       {/* SMS Confirmation Modal */}
       {showSMSModal && selectedParticipant && (
         <div
@@ -466,8 +464,7 @@ function DataPage() {
           </div>
         </div>
       )}
-
-      {/* Location Modal */}
+      /* Enhanced Location Modal Section - Replace in DataPage.jsx */
       {showLocationModal && selectedLocation && (
         <div
           className="fixed inset-0 flex items-center justify-center z-50 p-4"
@@ -498,6 +495,7 @@ function DataPage() {
             </div>
 
             <div className="px-6 py-6 overflow-y-auto max-h-[calc(85vh-140px)] space-y-5">
+              {/* Participant Name */}
               <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-4 border-l-4 border-indigo-500">
                 <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1">
                   Participant Name
@@ -507,58 +505,7 @@ function DataPage() {
                 </p>
               </div>
 
-              {selectedLocation.city && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-4 border border-gray-200">
-                    <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2 flex items-center">
-                      <MapPin className="w-3.5 h-3.5 mr-1.5 text-indigo-600" />
-                      City
-                    </p>
-                    <p className="text-gray-800 font-medium">
-                      {selectedLocation.city}
-                    </p>
-                  </div>
-
-                  <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-4 border border-gray-200">
-                    <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">
-                      State
-                    </p>
-                    <p className="text-gray-800 font-medium">
-                      {selectedLocation.state || "N/A"}
-                    </p>
-                  </div>
-
-                  <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-4 border border-gray-200">
-                    <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">
-                      Country
-                    </p>
-                    <p className="text-gray-800 font-medium">
-                      {selectedLocation.country || "N/A"}
-                    </p>
-                  </div>
-
-                  <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-4 border border-gray-200">
-                    <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">
-                      Country Code
-                    </p>
-                    <p className="text-gray-800 font-medium uppercase">
-                      {selectedLocation.country_code || "N/A"}
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              {selectedLocation.full_address && (
-                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-200">
-                  <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">
-                    Full Address
-                  </p>
-                  <p className="text-gray-700 leading-relaxed">
-                    {selectedLocation.full_address}
-                  </p>
-                </div>
-              )}
-
+              {/* GPS Coordinates - Always show if available */}
               {selectedLocation.latitude && selectedLocation.longitude && (
                 <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-4 border border-green-200">
                   <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-3">
@@ -598,6 +545,72 @@ function DataPage() {
                 </div>
               )}
 
+              {/* Location Details - Only show if at least one field has data */}
+              {(selectedLocation.city ||
+                selectedLocation.state ||
+                selectedLocation.country ||
+                selectedLocation.country_code) && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {selectedLocation.city && (
+                    <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-4 border border-gray-200">
+                      <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2 flex items-center">
+                        <MapPin className="w-3.5 h-3.5 mr-1.5 text-indigo-600" />
+                        City
+                      </p>
+                      <p className="text-gray-800 font-medium">
+                        {selectedLocation.city}
+                      </p>
+                    </div>
+                  )}
+
+                  {selectedLocation.state && (
+                    <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-4 border border-gray-200">
+                      <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">
+                        State
+                      </p>
+                      <p className="text-gray-800 font-medium">
+                        {selectedLocation.state}
+                      </p>
+                    </div>
+                  )}
+
+                  {selectedLocation.country && (
+                    <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-4 border border-gray-200">
+                      <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">
+                        Country
+                      </p>
+                      <p className="text-gray-800 font-medium">
+                        {selectedLocation.country}
+                      </p>
+                    </div>
+                  )}
+
+                  {selectedLocation.country_code && (
+                    <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-4 border border-gray-200">
+                      <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">
+                        Country Code
+                      </p>
+                      <p className="text-gray-800 font-medium uppercase">
+                        {selectedLocation.country_code}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Full Address - Only show if available */}
+              {selectedLocation.full_address && (
+                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-200">
+                  <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">
+                    Full Address
+                  </p>
+                  <p className="text-gray-700 leading-relaxed">
+                    {selectedLocation.full_address}
+                  </p>
+                </div>
+              )}
+
+              {/* Location Timestamp - Only show if available */}
               {selectedLocation.location_timestamp && (
                 <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl p-4 border border-amber-200">
                   <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">
@@ -617,11 +630,25 @@ function DataPage() {
                   </p>
                 </div>
               )}
+
+              {/* No Location Data Message */}
+              {!selectedLocation.latitude &&
+                !selectedLocation.city &&
+                !selectedLocation.full_address && (
+                  <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-6 text-center border border-gray-200">
+                    <MapPin className="w-12 h-12 mx-auto mb-3 text-gray-400" />
+                    <p className="text-gray-600 font-medium">
+                      No location data available
+                    </p>
+                    <p className="text-sm text-gray-500 mt-1">
+                      This participant did not share their location
+                    </p>
+                  </div>
+                )}
             </div>
           </div>
         </div>
       )}
-
       {/* Spiritual Quote */}
       <div className="mb-8 bg-gradient-to-r from-orange-100 to-amber-100 rounded-2xl p-6 shadow-lg border-2 border-orange-200">
         <div className="flex items-start">
@@ -633,7 +660,6 @@ function DataPage() {
           </div>
         </div>
       </div>
-
       {/* Header Card */}
       <div className="bg-white rounded-3xl shadow-2xl p-6 md:p-8 mb-8 border-t-4 border-orange-500 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-orange-200 to-transparent rounded-bl-full opacity-30"></div>
@@ -675,14 +701,12 @@ function DataPage() {
           </div>
         </div>
       </div>
-
       {error && (
         <div className="bg-gradient-to-r from-red-50 to-rose-50 text-red-800 p-5 rounded-xl flex items-start mb-6 shadow-md border-l-4 border-red-500">
           <AlertCircle className="w-6 h-6 mr-3 flex-shrink-0 mt-0.5" />
           <span className="font-medium">{error}</span>
         </div>
       )}
-
       {loading ? (
         <div className="bg-white rounded-3xl shadow-2xl p-16 text-center">
           <div className="inline-block animate-spin rounded-full h-16 w-16 border-4 border-orange-200 border-t-orange-600 mb-4"></div>
@@ -940,7 +964,6 @@ function DataPage() {
           </div>
         </div>
       )}
-
       {/* Bottom Quote */}
       {data.length > 0 && (
         <div className="mt-8 text-center">
