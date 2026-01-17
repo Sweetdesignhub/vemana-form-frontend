@@ -25,7 +25,8 @@ function VerifyPage() {
   const verifyCertificate = async () => {
     try {
       const response = await axios.get(
-        `http://localhost:5000/api/verify/${id}`
+        // `http://localhost:5000/api/verify/${id}`
+        `https://chatbot.stockgenius.ai/api/verify/${id}`
       );
 
       if (response.data.valid) {

@@ -30,7 +30,8 @@ function DataPage() {
   const [showLocationModal, setShowLocationModal] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState(null);
 
-  const API_BASE_URL = "http://localhost:5000";
+  // const API_BASE_URL = "http://localhost:5000";
+  const API_BASE_URL = "https://chatbot.stockgenius.ai";
 
   const fetchData = async () => {
     setLoading(true);

@@ -94,7 +94,11 @@ function FormPage() {
           : null,
       };
 
-      await axios.post("http://localhost:5000/api/submit", submissionData);
+      // await axios.post("http://localhost:5000/api/submit", submissionData);
+      await axios.post(
+        "https://chatbot.stockgenius.ai/api/submit",
+        submissionData
+      );
 
       setStatus({
         type: "success",
