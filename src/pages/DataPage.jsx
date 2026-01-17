@@ -12,6 +12,8 @@ import {
   CheckCircle,
   X,
   MapPin,
+  MessageSquare,
+  ExternalLink,
 } from "lucide-react";
 
 function DataPage() {
@@ -26,13 +28,14 @@ function DataPage() {
     message: "",
   });
   const [showEmailModal, setShowEmailModal] = useState(false);
+  const [showSMSModal, setShowSMSModal] = useState(false);
   const [selectedParticipant, setSelectedParticipant] = useState(null);
   const [showLocationModal, setShowLocationModal] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState(null);
 
-  // const API_BASE_URL = "http://localhost:5000";
   const API_BASE_URL =
     "https://vemana-form-backend-gqdxbfeugnckexbm.eastasia-01.azurewebsites.net";
+  // "http://localhost:5000";
 
   const fetchData = async () => {
     setLoading(true);
@@ -59,16 +62,24 @@ function DataPage() {
 
     const exportData = data.map((item) => ({
       Name: item.name,
-      Email: item.email,
-      Phone: item.phone,
-      Message: item.message,
+      Email: item.email || "N/A",
+      Phone: item.phone || "N/A",
+      Message: item.message || "N/A",
       City: item.city || "N/A",
       State: item.state || "N/A",
       Country: item.country || "N/A",
       "Full Address": item.full_address || "N/A",
       Latitude: item.latitude || "N/A",
       Longitude: item.longitude || "N/A",
+      "Certificate URL": item.certificate_url || "N/A",
       "Certificate Sent": item.certificate_sent ? "Yes" : "No",
+      "Send Method": item.send_method
+        ? item.send_method === "email"
+          ? "Email"
+          : item.send_method === "sms"
+          ? "SMS"
+          : "N/A"
+        : "N/A",
       "Certificate Sent Date": item.certificate_sent_at
         ? new Date(item.certificate_sent_at).toLocaleString()
         : "N/A",
@@ -90,7 +101,9 @@ function DataPage() {
       { wch: 50 }, // Full Address
       { wch: 15 }, // Latitude
       { wch: 15 }, // Longitude
+      { wch: 60 }, // Certificate URL
       { wch: 15 }, // Certificate Sent
+      { wch: 15 }, // Send Method
       { wch: 20 }, // Certificate Sent Date
       { wch: 20 }, // Registration Date
     ];
@@ -161,28 +174,36 @@ function DataPage() {
 
   const handleSendCertificate = async (participant) => {
     if (!participant.email || participant.email.trim() === "") {
-      setSelectedParticipant(null);
-      setShowEmailModal(false);
       alert("This participant has no email address on record.");
       return;
     }
 
     setSelectedParticipant(participant);
     setShowEmailModal(true);
+  };
 
-    setActionLoading({ ...actionLoading, [`email-${participant.id}`]: true });
-    setActionStatus({ ...actionStatus, [`email-${participant.id}`]: "" });
+  const confirmSendEmail = async () => {
+    if (!selectedParticipant) return;
+
+    setActionLoading({
+      ...actionLoading,
+      [`email-${selectedParticipant.id}`]: true,
+    });
+    setActionStatus({
+      ...actionStatus,
+      [`email-${selectedParticipant.id}`]: "",
+    });
 
     try {
       await axios.post(
-        `${API_BASE_URL}/api/send-certificate/${participant.id}`
+        `${API_BASE_URL}/api/send-certificate/${selectedParticipant.id}`
       );
 
       setActionStatus({
         ...actionStatus,
-        [`email-${participant.id}`]: {
+        [`email-${selectedParticipant.id}`]: {
           type: "success",
-          message: `Certificate sent to ${participant.email}!`,
+          message: `Certificate sent to ${selectedParticipant.email}!`,
         },
       });
 
@@ -191,7 +212,7 @@ function DataPage() {
       console.error("Error sending certificate:", error);
       setActionStatus({
         ...actionStatus,
-        [`email-${participant.id}`]: {
+        [`email-${selectedParticipant.id}`]: {
           type: "error",
           message: error.response?.data?.error || "Failed to send certificate",
         },
@@ -199,10 +220,74 @@ function DataPage() {
     } finally {
       setActionLoading({
         ...actionLoading,
-        [`email-${participant.id}`]: false,
+        [`email-${selectedParticipant.id}`]: false,
       });
+      setShowEmailModal(false);
       setTimeout(() => {
-        setActionStatus({ ...actionStatus, [`email-${participant.id}`]: "" });
+        setActionStatus({
+          ...actionStatus,
+          [`email-${selectedParticipant.id}`]: "",
+        });
+      }, 5000);
+    }
+  };
+
+  const handleSendSMS = async (participant) => {
+    if (!participant.phone || participant.phone.trim() === "") {
+      alert("This participant has no phone number on record.");
+      return;
+    }
+
+    setSelectedParticipant(participant);
+    setShowSMSModal(true);
+  };
+
+  const confirmSendSMS = async () => {
+    if (!selectedParticipant) return;
+
+    setActionLoading({
+      ...actionLoading,
+      [`sms-${selectedParticipant.id}`]: true,
+    });
+    setActionStatus({
+      ...actionStatus,
+      [`sms-${selectedParticipant.id}`]: "",
+    });
+
+    try {
+      await axios.post(
+        `${API_BASE_URL}/api/send-sms/${selectedParticipant.id}`
+      );
+
+      setActionStatus({
+        ...actionStatus,
+        [`sms-${selectedParticipant.id}`]: {
+          type: "success",
+          message: `Certificate link sent via SMS to ${selectedParticipant.phone}!`,
+        },
+      });
+
+      await fetchData();
+    } catch (error) {
+      console.error("Error sending SMS:", error);
+      setActionStatus({
+        ...actionStatus,
+        [`sms-${selectedParticipant.id}`]: {
+          type: "error",
+          message: error.response?.data?.error || "Failed to send SMS",
+        },
+      });
+    } finally {
+      setActionLoading({
+        ...actionLoading,
+        [`sms-${selectedParticipant.id}`]: false,
+      });
+      setShowSMSModal(false);
+      setTimeout(() => {
+        setActionStatus({
+          ...actionStatus,
+          [`sms-${selectedParticipant.id}`]: "",
+        });
       }, 5000);
     }
   };
@@ -250,7 +335,7 @@ function DataPage() {
               </h3>
               <button
                 onClick={() => setShowMessageModal(false)}
-                className="text-white hover:bg-orange-700 hover:bg-opacity-50 cursor-pointer rounded-full p-2 transition-colors"
+                className="text-white hover:bg-orange-700 hover:bg-opacity-50 rounded-full p-2 transition-colors"
               >
                 <X className="w-6 h-6" />
               </button>
@@ -280,17 +365,20 @@ function DataPage() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="bg-gradient-to-r from-purple-600 to-purple-500 px-6 py-4 flex items-center justify-between">
-              <h3 className="text-lg font-bold text-white">Send Certificate</h3>
+              <h3 className="text-lg font-bold text-white flex items-center">
+                <Mail className="w-5 h-5 mr-2" />
+                Send Certificate via Email
+              </h3>
               <button
                 onClick={() => setShowEmailModal(false)}
-                className="text-white hover:bg-purple-700 hover:bg-opacity-50 cursor-pointer rounded-full p-2 transition-colors"
+                className="text-white hover:bg-purple-700 hover:bg-opacity-50 rounded-full p-2 transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
             <div className="p-6">
               <p className="text-gray-700 mb-4">
-                Do you want to send the certificate to{" "}
+                Send certificate to{" "}
                 <span className="font-semibold">
                   {selectedParticipant.email}
                 </span>
@@ -304,13 +392,11 @@ function DataPage() {
                   Cancel
                 </button>
                 <button
-                  onClick={() => {
-                    handleSendCertificate(selectedParticipant);
-                    setShowEmailModal(false);
-                  }}
-                  className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                  onClick={confirmSendEmail}
+                  className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center"
                 >
-                  Send
+                  <Mail className="w-4 h-4 mr-2" />
+                  Send Email
                 </button>
               </div>
             </div>
@@ -318,253 +404,65 @@ function DataPage() {
         </div>
       )}
 
-      {/* Spiritual Quote */}
-      <div className="mb-8 bg-gradient-to-r from-orange-100 to-amber-100 rounded-2xl p-6 shadow-lg border-2 border-orange-200">
-        <div className="flex items-start">
-          <div>
-            <p className="text-sm text-gray-600">
-              "For those who have acquired knowledge, the world is bright as
-              day"
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Header Card */}
-      <div className="bg-white rounded-3xl shadow-2xl p-6 md:p-8 mb-8 border-t-4 border-orange-500 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-orange-200 to-transparent rounded-bl-full opacity-30"></div>
-
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div className="flex items-center">
-            <div className="inline-flex items-center justify-center w-14 h-14 bg-gradient-to-br from-orange-500 to-amber-600 rounded-full mr-4 shadow-lg">
-              <Users className="w-7 h-7 text-white" />
+      {/* SMS Confirmation Modal */}
+      {showSMSModal && selectedParticipant && (
+        <div
+          className="fixed inset-0 flex items-center justify-center z-50 p-4"
+          style={{
+            backgroundColor: "rgba(0, 0, 0, 0.2)",
+            backdropFilter: "blur(5px)",
+            WebkitBackdropFilter: "blur(5px)",
+          }}
+          onClick={() => setShowSMSModal(false)}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="bg-gradient-to-r from-blue-600 to-blue-500 px-6 py-4 flex items-center justify-between">
+              <h3 className="text-lg font-bold text-white flex items-center">
+                <MessageSquare className="w-5 h-5 mr-2" />
+                Send Certificate via SMS
+              </h3>
+              <button
+                onClick={() => setShowSMSModal(false)}
+                className="text-white hover:bg-blue-700 hover:bg-opacity-50 rounded-full p-2 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
             </div>
-            <div>
-              <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">
-                Registered Participants
-              </h1>
-              <p className="text-gray-600 mt-1">
-                Souls gathered for spiritual enlightenment
+            <div className="p-6">
+              <p className="text-gray-700 mb-4">
+                Send certificate link via SMS to{" "}
+                <span className="font-semibold">
+                  +91{selectedParticipant.phone}
+                </span>
+                ?
               </p>
-            </div>
-          </div>
-
-          <div className="flex flex-col sm:flex-row gap-3">
-            <button
-              onClick={fetchData}
-              disabled={loading}
-              className="bg-gradient-to-r from-gray-600 to-gray-700 text-white cursor-pointer px-5 py-3 rounded-xl hover:from-gray-700 hover:to-gray-800 transition-all duration-300 flex items-center justify-center disabled:from-gray-400 disabled:to-gray-500 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 font-medium"
-            >
-              <RefreshCw
-                className={`w-5 h-5 mr-2 ${loading ? "animate-spin" : ""}`}
-              />
-              Refresh
-            </button>
-            <button
-              onClick={exportToExcel}
-              disabled={data.length === 0}
-              className="bg-gradient-to-r from-green-600 to-emerald-700 text-white cursor-pointer px-5 py-3 cursor-pointer rounded-xl hover:from-green-700 hover:to-emerald-800 transition-all duration-300 flex items-center justify-center disabled:from-gray-400 disabled:to-gray-500 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 font-medium"
-            >
-              <Download className="w-5 h-5 mr-2" />
-              Export to Excel
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {error && (
-        <div className="bg-gradient-to-r from-red-50 to-rose-50 text-red-800 p-5 rounded-xl flex items-start mb-6 shadow-md border-l-4 border-red-500">
-          <AlertCircle className="w-6 h-6 mr-3 flex-shrink-0 mt-0.5" />
-          <span className="font-medium">{error}</span>
-        </div>
-      )}
-
-      {loading ? (
-        <div className="bg-white rounded-3xl shadow-2xl p-16 text-center">
-          <div className="inline-block animate-spin rounded-full h-16 w-16 border-4 border-orange-200 border-t-orange-600 mb-4"></div>
-          <p className="text-xl text-gray-600 font-medium">
-            Loading participant data...
-          </p>
-          <p className="text-sm text-gray-500 mt-2">
-            Please wait while we gather the information
-          </p>
-        </div>
-      ) : data.length === 0 ? (
-        <div className="bg-white rounded-3xl shadow-2xl p-16 text-center relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-orange-50 to-amber-50 opacity-50"></div>
-          <div className="relative z-10">
-            <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-orange-200 to-amber-300 rounded-full mb-6">
-              <Users className="w-10 h-10 text-orange-700" />
-            </div>
-            <p className="text-gray-600 text-xl font-medium mb-2">
-              No participants registered yet
-            </p>
-            <p className="text-gray-500">
-              Be the first to register for this spiritual gathering!
-            </p>
-          </div>
-        </div>
-      ) : (
-        <div className="bg-white rounded-3xl shadow-2xl overflow-hidden border-t-4 border-orange-500">
-          {/* Stats Bar */}
-          <div className="bg-gradient-to-r from-orange-50 to-amber-50 px-6 py-4 border-b-2 border-orange-200">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <p className="text-sm font-semibold text-gray-700">
-                  Total Registered Participants:{" "}
-                  <span className="text-orange-600 text-lg ml-1">
-                    {data.length}
-                  </span>
+              <div className="bg-blue-50 rounded-lg p-3 mb-4 border border-blue-200">
+                <p className="text-xs text-gray-600 mb-2">Preview message:</p>
+                <p className="text-sm text-gray-700 italic">
+                  "Namaste {selectedParticipant.name}! 🙏 Your Vemana Vignana
+                  Yatra Certificate is ready! View & Download: [Certificate
+                  Link]"
                 </p>
               </div>
-              <p className="text-xs text-gray-600 hidden sm:block">
-                Last updated: {new Date().toLocaleString("en-IN")}
-              </p>
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => setShowSMSModal(false)}
+                  className="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmSendSMS}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center"
+                >
+                  <MessageSquare className="w-4 h-4 mr-2" />
+                  Send SMS
+                </button>
+              </div>
             </div>
-          </div>
-
-          {/* Table */}
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-orange-200">
-              <thead className="bg-gradient-to-r from-orange-600 to-amber-600">
-                <tr>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">
-                    Name
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">
-                    Email
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">
-                    Phone
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">
-                    Location
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">
-                    Message
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">
-                    Registration Date
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">
-                    Certificate
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-orange-100">
-                {data.map((row, index) => (
-                  <tr
-                    key={row.id}
-                    className="hover:bg-orange-50 transition-colors duration-200"
-                    style={{
-                      backgroundColor:
-                        index % 2 === 0 ? "white" : "rgba(255, 247, 237, 0.3)",
-                    }}
-                  >
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {row.name}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                      {row.email || "N/A"}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                      {row.phone || "N/A"}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-700">
-                      {row.city || row.latitude ? (
-                        <button
-                          onClick={() => handleViewLocation(row)}
-                          className="inline-flex items-center px-3 py-1.5 bg-indigo-600 text-white rounded-lg cursor-pointer hover:bg-indigo-700 transition-colors duration-200 text-xs font-medium"
-                        >
-                          <MapPin className="w-3 h-3 mr-1.5" />
-                          View
-                        </button>
-                      ) : (
-                        <span className="text-gray-400">No location</span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-700">
-                      <button
-                        onClick={() => handleViewMessage(row.name, row.message)}
-                        className="inline-flex items-center px-3 py-1.5 bg-blue-600 text-white rounded-lg cursor-pointer hover:bg-blue-700 transition-colors duration-200 text-xs font-medium"
-                      >
-                        <Eye className="w-3 h-3 mr-1.5" />
-                        View
-                      </button>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                      {formatDate(row.created_at)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      <div className="flex flex-col gap-2">
-                        {/* Download Certificate Button */}
-                        <button
-                          onClick={() => handleDownloadCertificate(row)}
-                          disabled={actionLoading[`download-${row.id}`]}
-                          className="inline-flex items-center justify-center px-3 py-1.5 bg-green-600 text-white cursor-pointer rounded-lg hover:bg-green-700 transition-colors duration-200 disabled:bg-gray-400 text-xs font-medium"
-                        >
-                          {actionLoading[`download-${row.id}`] ? (
-                            <div className="animate-spin rounded-full h-3 w-3 border-2 border-white border-t-transparent mr-1.5"></div>
-                          ) : (
-                            <Download className="w-3 h-3 mr-1.5" />
-                          )}
-                          Download
-                        </button>
-
-                        {/* Send Email Button */}
-                        <button
-                          onClick={() => handleSendCertificate(row)}
-                          disabled={
-                            !row.email ||
-                            row.email.trim() === "" ||
-                            actionLoading[`email-${row.id}`]
-                          }
-                          className={`inline-flex items-center justify-center px-3 py-1.5 cursor-pointer rounded-lg transition-colors duration-200 text-xs font-medium ${
-                            row.certificate_sent
-                              ? "bg-orange-600 hover:bg-orange-700 text-white"
-                              : "bg-purple-600 hover:bg-purple-700 text-white"
-                          } disabled:bg-gray-400`}
-                        >
-                          {actionLoading[`email-${row.id}`] ? (
-                            <div className="animate-spin rounded-full h-3 w-3 border-2 border-white border-t-transparent mr-1.5"></div>
-                          ) : row.certificate_sent ? (
-                            <CheckCircle className="w-3 h-3 mr-1.5" />
-                          ) : (
-                            <Mail className="w-3 h-3 mr-1.5" />
-                          )}
-                          {row.certificate_sent ? "Resend" : "Send"}
-                        </button>
-
-                        {/* Status Messages */}
-                        {actionStatus[`download-${row.id}`] && (
-                          <div
-                            className={`text-xs ${
-                              actionStatus[`download-${row.id}`].type ===
-                              "success"
-                                ? "text-green-600"
-                                : "text-red-600"
-                            }`}
-                          >
-                            {actionStatus[`download-${row.id}`].message}
-                          </div>
-                        )}
-                        {actionStatus[`email-${row.id}`] && (
-                          <div
-                            className={`text-xs ${
-                              actionStatus[`email-${row.id}`].type === "success"
-                                ? "text-green-600"
-                                : "text-red-600"
-                            }`}
-                          >
-                            {actionStatus[`email-${row.id}`].message}
-                          </div>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
           </div>
         </div>
       )}
@@ -593,7 +491,7 @@ function DataPage() {
               </div>
               <button
                 onClick={() => setShowLocationModal(false)}
-                className="text-white hover:bg-indigo-700 hover:bg-opacity-50 cursor-pointer rounded-full p-2 transition-colors"
+                className="text-white hover:bg-indigo-700 hover:bg-opacity-50 rounded-full p-2 transition-colors"
               >
                 <X className="w-6 h-6" />
               </button>
@@ -720,6 +618,325 @@ function DataPage() {
                 </div>
               )}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Spiritual Quote */}
+      <div className="mb-8 bg-gradient-to-r from-orange-100 to-amber-100 rounded-2xl p-6 shadow-lg border-2 border-orange-200">
+        <div className="flex items-start">
+          <div>
+            <p className="text-sm text-gray-600">
+              "For those who have acquired knowledge, the world is bright as
+              day"
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Header Card */}
+      <div className="bg-white rounded-3xl shadow-2xl p-6 md:p-8 mb-8 border-t-4 border-orange-500 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-orange-200 to-transparent rounded-bl-full opacity-30"></div>
+
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div className="flex items-center">
+            <div className="inline-flex items-center justify-center w-14 h-14 bg-gradient-to-br from-orange-500 to-amber-600 rounded-full mr-4 shadow-lg">
+              <Users className="w-7 h-7 text-white" />
+            </div>
+            <div>
+              <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">
+                Registered Participants
+              </h1>
+              <p className="text-gray-600 mt-1">
+                Souls gathered for spiritual enlightenment
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-3">
+            <button
+              onClick={fetchData}
+              disabled={loading}
+              className="bg-gradient-to-r from-gray-600 to-gray-700 text-white px-5 py-3 rounded-xl hover:from-gray-700 hover:to-gray-800 transition-all duration-300 flex items-center justify-center disabled:from-gray-400 disabled:to-gray-500 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 font-medium"
+            >
+              <RefreshCw
+                className={`w-5 h-5 mr-2 ${loading ? "animate-spin" : ""}`}
+              />
+              Refresh
+            </button>
+            <button
+              onClick={exportToExcel}
+              disabled={data.length === 0}
+              className="bg-gradient-to-r from-green-600 to-emerald-700 text-white px-5 py-3 rounded-xl hover:from-green-700 hover:to-emerald-800 transition-all duration-300 flex items-center justify-center disabled:from-gray-400 disabled:to-gray-500 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 font-medium"
+            >
+              <Download className="w-5 h-5 mr-2" />
+              Export to Excel
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {error && (
+        <div className="bg-gradient-to-r from-red-50 to-rose-50 text-red-800 p-5 rounded-xl flex items-start mb-6 shadow-md border-l-4 border-red-500">
+          <AlertCircle className="w-6 h-6 mr-3 flex-shrink-0 mt-0.5" />
+          <span className="font-medium">{error}</span>
+        </div>
+      )}
+
+      {loading ? (
+        <div className="bg-white rounded-3xl shadow-2xl p-16 text-center">
+          <div className="inline-block animate-spin rounded-full h-16 w-16 border-4 border-orange-200 border-t-orange-600 mb-4"></div>
+          <p className="text-xl text-gray-600 font-medium">
+            Loading participant data...
+          </p>
+          <p className="text-sm text-gray-500 mt-2">
+            Please wait while we gather the information
+          </p>
+        </div>
+      ) : data.length === 0 ? (
+        <div className="bg-white rounded-3xl shadow-2xl p-16 text-center relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-orange-50 to-amber-50 opacity-50"></div>
+          <div className="relative z-10">
+            <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-orange-200 to-amber-300 rounded-full mb-6">
+              <Users className="w-10 h-10 text-orange-700" />
+            </div>
+            <p className="text-gray-600 text-xl font-medium mb-2">
+              No participants registered yet
+            </p>
+            <p className="text-gray-500">
+              Be the first to register for this spiritual gathering!
+            </p>
+          </div>
+        </div>
+      ) : (
+        <div className="bg-white rounded-3xl shadow-2xl overflow-hidden border-t-4 border-orange-500">
+          {/* Stats Bar */}
+          <div className="bg-gradient-to-r from-orange-50 to-amber-50 px-6 py-4 border-b-2 border-orange-200">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <p className="text-sm font-semibold text-gray-700">
+                  Total Registered Participants:{" "}
+                  <span className="text-orange-600 text-lg ml-1">
+                    {data.length}
+                  </span>
+                </p>
+              </div>
+              <p className="text-xs text-gray-600 hidden sm:block">
+                Last updated: {new Date().toLocaleString("en-IN")}
+              </p>
+            </div>
+          </div>
+
+          {/* Table */}
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-orange-200">
+              <thead className="bg-gradient-to-r from-orange-600 to-amber-600">
+                <tr>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">
+                    Name
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">
+                    Email
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">
+                    Phone
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">
+                    Location
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">
+                    Message
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">
+                    Registration Date
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">
+                    Certificate
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-orange-100">
+                {data.map((row, index) => (
+                  <tr
+                    key={row.id}
+                    className="hover:bg-orange-50 transition-colors duration-200"
+                    style={{
+                      backgroundColor:
+                        index % 2 === 0 ? "white" : "rgba(255, 247, 237, 0.3)",
+                    }}
+                  >
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      {row.name}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                      {row.email || "N/A"}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                      {row.phone || "N/A"}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-700">
+                      {row.city || row.latitude ? (
+                        <button
+                          onClick={() => handleViewLocation(row)}
+                          className="inline-flex items-center px-3 py-1.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors duration-200 text-xs font-medium"
+                        >
+                          <MapPin className="w-3 h-3 mr-1.5" />
+                          View
+                        </button>
+                      ) : (
+                        <span className="text-gray-400">No location</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-700">
+                      <button
+                        onClick={() => handleViewMessage(row.name, row.message)}
+                        className="inline-flex items-center px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 text-xs font-medium"
+                      >
+                        <Eye className="w-3 h-3 mr-1.5" />
+                        View
+                      </button>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                      {formatDate(row.created_at)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      <div className="flex flex-col gap-2">
+                        {/* Send Method Badge */}
+                        {row.send_method && (
+                          <span
+                            className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-semibold ${
+                              row.send_method === "email"
+                                ? "bg-purple-100 text-purple-800"
+                                : row.send_method === "sms"
+                                ? "bg-blue-100 text-blue-800"
+                                : "bg-gray-100 text-gray-800"
+                            }`}
+                          >
+                            {row.send_method === "email" && (
+                              <>
+                                <Mail className="w-3 h-3 mr-1" />
+                                Sent via Email
+                              </>
+                            )}
+                            {row.send_method === "sms" && (
+                              <>
+                                <MessageSquare className="w-3 h-3 mr-1" />
+                                Sent via SMS
+                              </>
+                            )}
+                          </span>
+                        )}
+
+                        {/* View Certificate URL */}
+                        {row.certificate_url && (
+                          <a
+                            href={row.certificate_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center justify-center px-3 py-1.5 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors duration-200 text-xs font-medium"
+                          >
+                            <ExternalLink className="w-3 h-3 mr-1.5" />
+                            View Online
+                          </a>
+                        )}
+
+                        {/* Download Certificate Button */}
+                        <button
+                          onClick={() => handleDownloadCertificate(row)}
+                          disabled={actionLoading[`download-${row.id}`]}
+                          className="inline-flex items-center justify-center px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200 disabled:bg-gray-400 text-xs font-medium"
+                        >
+                          {actionLoading[`download-${row.id}`] ? (
+                            <div className="animate-spin rounded-full h-3 w-3 border-2 border-white border-t-transparent mr-1.5"></div>
+                          ) : (
+                            <Download className="w-3 h-3 mr-1.5" />
+                          )}
+                          Download
+                        </button>
+
+                        {/* Send Email Button */}
+                        <button
+                          onClick={() => handleSendCertificate(row)}
+                          disabled={
+                            !row.email ||
+                            row.email.trim() === "" ||
+                            actionLoading[`email-${row.id}`]
+                          }
+                          className={`inline-flex items-center justify-center px-3 py-1.5 rounded-lg transition-colors duration-200 text-xs font-medium ${
+                            row.certificate_sent
+                              ? "bg-orange-600 hover:bg-orange-700 text-white"
+                              : "bg-purple-600 hover:bg-purple-700 text-white"
+                          } disabled:bg-gray-400`}
+                        >
+                          {actionLoading[`email-${row.id}`] ? (
+                            <div className="animate-spin rounded-full h-3 w-3 border-2 border-white border-t-transparent mr-1.5"></div>
+                          ) : row.certificate_sent ? (
+                            <CheckCircle className="w-3 h-3 mr-1.5" />
+                          ) : (
+                            <Mail className="w-3 h-3 mr-1.5" />
+                          )}
+                          {row.certificate_sent ? "Resend Email" : "Send Email"}
+                        </button>
+
+                        {/* Send SMS Button */}
+                        <button
+                          onClick={() => handleSendSMS(row)}
+                          disabled={
+                            !row.phone ||
+                            row.phone.trim() === "" ||
+                            actionLoading[`sms-${row.id}`]
+                          }
+                          className="inline-flex items-center justify-center px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 disabled:bg-gray-400 text-xs font-medium"
+                        >
+                          {actionLoading[`sms-${row.id}`] ? (
+                            <div className="animate-spin rounded-full h-3 w-3 border-2 border-white border-t-transparent mr-1.5"></div>
+                          ) : (
+                            <MessageSquare className="w-3 h-3 mr-1.5" />
+                          )}
+                          Send SMS
+                        </button>
+
+                        {/* Status Messages */}
+                        {actionStatus[`download-${row.id}`] && (
+                          <div
+                            className={`text-xs ${
+                              actionStatus[`download-${row.id}`].type ===
+                              "success"
+                                ? "text-green-600"
+                                : "text-red-600"
+                            }`}
+                          >
+                            {actionStatus[`download-${row.id}`].message}
+                          </div>
+                        )}
+                        {actionStatus[`email-${row.id}`] && (
+                          <div
+                            className={`text-xs ${
+                              actionStatus[`email-${row.id}`].type === "success"
+                                ? "text-green-600"
+                                : "text-red-600"
+                            }`}
+                          >
+                            {actionStatus[`email-${row.id}`].message}
+                          </div>
+                        )}
+                        {actionStatus[`sms-${row.id}`] && (
+                          <div
+                            className={`text-xs ${
+                              actionStatus[`sms-${row.id}`].type === "success"
+                                ? "text-green-600"
+                                : "text-red-600"
+                            }`}
+                          >
+                            {actionStatus[`sms-${row.id}`].message}
+                          </div>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       )}
